@@ -1,0 +1,2 @@
+class AppException(BaseException):
+    pass

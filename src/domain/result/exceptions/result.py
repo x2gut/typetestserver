@@ -1,0 +1,2 @@
+class BaseResultException(Exception):
+    pass

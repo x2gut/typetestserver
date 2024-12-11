@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: "type_test_app"
+    build: ./
+    depends_on:
+      - db
+      - redis
+    command: bash -c "uvicorn main:app --host 0.0.0.0 --port 8000"
+    volumes:
+      - ./src:/app/src
+    ports:
+      - "8000:8000"
+    restart: always
+    env_file:
+      - .env
+
+  db:
+    container_name: "type_test_postgres"
+    image: postgres
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+      POSTGRES_DB: ${POSTGRES_BD_NAME}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - .postgres:/var/lib/postgres/data
+    restart: always
+    env_file:
+      - .env
+
+  redis:
+    container_name: "type_test_redis"
+    image: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  celery:
+    container_name: "type_test_celery"
+    build: ./
+    depends_on:
+      - redis
+      - db
+    command: bash -c "celery -A src.infrastructure.celery.celery_app worker --loglevel=info"
+    volumes:
+      - ./src:/app/src
+    restart: always
+    env_file:
+      - .env
+
+volumes:
+  .postgres:
